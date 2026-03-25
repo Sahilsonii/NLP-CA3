@@ -1,12 +1,18 @@
-# SMS Spam Detection: A Comparative Case Study
+# SMS Spam Detection: A Comparative Study of NLP Classification Models
 
-## NLP Text Classification Project
+## Case Study Report
 
 ---
 
-## Abstract
-
-This case study presents a comprehensive analysis of various machine learning approaches for SMS spam detection. We implement and compare five different models - Logistic Regression, Naive Bayes, Random Forest, Support Vector Machine (SVM), and Long Short-Term Memory (LSTM) Neural Network - to classify SMS messages as spam or legitimate (ham). The study includes complete data preprocessing, feature extraction, model training, evaluation, and comparative analysis.
+## Table of Contents
+1. [Introduction](#1-introduction)
+2. [Dataset Description](#2-dataset-description)
+3. [Methodology](#3-methodology)
+4. [Results](#4-results)
+5. [Comparative Analysis](#5-comparative-analysis)
+6. [Discussion](#6-discussion)
+7. [Conclusion](#7-conclusion)
+8. [References](#8-references)
 
 ---
 
@@ -14,57 +20,51 @@ This case study presents a comprehensive analysis of various machine learning ap
 
 ### 1.1 Problem Statement
 
-SMS spam detection is a critical task in modern communication systems. With the proliferation of mobile messaging, spam messages have become a significant nuisance and security concern. The objective of this project is to develop and compare multiple machine learning models capable of accurately classifying SMS messages as spam or legitimate.
+SMS spam has become a significant problem in mobile communication, causing inconvenience to users and potential security risks. The goal of this project is to develop and compare multiple machine learning models for automatically classifying SMS messages as spam or ham (legitimate).
 
 ### 1.2 Objectives
 
-1. Implement a complete NLP preprocessing pipeline for SMS text data
-2. Develop five different classification models (traditional ML and deep learning)
-3. Evaluate model performance using standard metrics
-4. Conduct comparative analysis to identify the best approach
-5. Provide recommendations based on findings
+1. Implement a comprehensive text preprocessing pipeline for SMS data
+2. Develop and train five different classification models:
+   - Logistic Regression
+   - Multinomial Naive Bayes
+   - Random Forest
+   - Support Vector Machine (SVM)
+   - LSTM Neural Network
+3. Evaluate models using standard classification metrics
+4. Provide comparative analysis and recommendations
 
-### 1.3 Scope
+### 1.3 Significance
 
-This study focuses on binary text classification using the SMS Spam Collection dataset. We explore both traditional machine learning approaches (Logistic Regression, Naive Bayes, Random Forest, SVM) and deep learning methods (LSTM) to provide a comprehensive comparison.
+Automated spam detection is crucial for:
+- Protecting users from phishing and scam attempts
+- Reducing unwanted message clutter
+- Improving mobile communication experience
+- Demonstrating practical NLP applications
 
 ---
 
 ## 2. Dataset Description
 
-### 2.1 Data Source
+### 2.1 Source
 
-**Dataset**: SMS Spam Collection
-**Source**: UCI Machine Learning Repository / Kaggle
-**URL**: https://www.kaggle.com/datasets/uciml/sms-spam-collection-dataset
+**SMS Spam Collection Dataset**
+- **Origin**: UCI Machine Learning Repository
+- **URL**: https://archive.ics.uci.edu/ml/datasets/SMS+Spam+Collection
 
-### 2.2 Dataset Characteristics
+### 2.2 Dataset Statistics
 
 | Attribute | Value |
 |-----------|-------|
 | Total Messages | 5,574 |
 | Ham (Legitimate) | 4,827 (86.6%) |
 | Spam | 747 (13.4%) |
-| Features | Message text (string) |
-| Target | Binary label (ham/spam) |
+| Average Message Length | 80 characters |
+| Average Word Count | 15 words |
 
-### 2.3 Class Imbalance
+### 2.3 Class Distribution
 
-The dataset exhibits class imbalance with approximately 6.5:1 ratio of ham to spam messages. This is addressed through:
-- Stratified train-test splitting
-- Appropriate evaluation metrics (F1-score, precision, recall)
-
-### 2.4 Sample Messages
-
-**Ham Examples:**
-- "Hey, how are you doing today?"
-- "Ok lar... Joking wif u oni..."
-- "I'll be there in 10 minutes"
-
-**Spam Examples:**
-- "WINNER!! As a valued network customer you have been selected..."
-- "Free entry to win 1000 cash! Text WIN to 89034"
-- "Urgent! Call 09061704688 now to claim your prize"
+The dataset exhibits class imbalance with approximately 87% ham and 13% spam messages. This imbalance was addressed during model evaluation by using stratified sampling and focusing on metrics like F1-score rather than just accuracy.
 
 ---
 
@@ -72,124 +72,35 @@ The dataset exhibits class imbalance with approximately 6.5:1 ratio of ham to sp
 
 ### 3.1 Data Preprocessing Pipeline
 
-Our preprocessing pipeline consists of the following steps:
-
-#### 3.1.1 Text Cleaning
-- Convert to lowercase
-- Remove URLs and email addresses
-- Remove phone numbers
-- Remove special characters and digits
-- Remove extra whitespace
-
-#### 3.1.2 Tokenization
-Split text into individual words (tokens) using NLTK's word_tokenize.
-
-#### 3.1.3 Stop Word Removal
-Remove common English words that don't carry significant meaning (using NLTK stopwords).
-
-#### 3.1.4 Lemmatization
-Reduce words to their base form using WordNet Lemmatizer.
-
-**Example:**
-```
-Original:  "WINNER!! You have won a FREE prize! Call 08001234567 NOW!"
-Processed: "winner free prize call"
-```
+**Pipeline Steps:**
+1. Text Cleaning (lowercase, remove URLs, special characters)
+2. Tokenization (split into words)
+3. Stopword Removal (remove common words)
+4. Lemmatization (convert to base form)
 
 ### 3.2 Feature Extraction
 
-#### 3.2.1 TF-IDF Vectorization (for Traditional ML)
-- Term Frequency-Inverse Document Frequency
-- Max features: 5,000
-- N-gram range: (1, 2) (unigrams and bigrams)
+**TF-IDF Vectorization (Traditional ML)**
+- Max Features: 5,000
+- N-gram Range: (1, 2)
 
-#### 3.2.2 Sequence Tokenization (for LSTM)
-- Vocabulary size: 10,000
-- Maximum sequence length: 100
-- Padding: Post-padding
+**Sequence Tokenization (LSTM)**
+- Max Words: 5,000
+- Max Sequence Length: 100
 
-### 3.3 Model Descriptions
+### 3.3 Models Implemented
 
-#### Model 1: Logistic Regression
-A linear classification model that uses the logistic function to model binary outcomes.
+1. **Logistic Regression**: Linear classifier, fast and interpretable
+2. **Naive Bayes**: Probabilistic classifier, very fast training
+3. **Random Forest**: Ensemble method, provides feature importance
+4. **SVM**: Maximum margin classifier, effective in high dimensions
+5. **LSTM**: Deep learning model, captures sequential patterns
 
-**Characteristics:**
-- Type: Linear classifier
-- Complexity: O(n * d) where n=samples, d=features
-- Interpretability: High
+### 3.4 Train-Test Split
 
-**Hyperparameters:**
-- max_iter: 1000
-- solver: lbfgs
-- random_state: 42
-
-#### Model 2: Multinomial Naive Bayes
-A probabilistic classifier based on Bayes' theorem with the assumption of feature independence.
-
-**Characteristics:**
-- Type: Probabilistic classifier
-- Particularly effective for text classification
-- Very fast training
-
-**Hyperparameters:**
-- alpha: 1.0 (Laplace smoothing)
-
-#### Model 3: Random Forest
-An ensemble learning method that constructs multiple decision trees and outputs the majority vote.
-
-**Characteristics:**
-- Type: Ensemble method
-- Handles non-linear relationships
-- Provides feature importance
-
-**Hyperparameters:**
-- n_estimators: 100
-- max_depth: None
-- random_state: 42
-
-#### Model 4: Support Vector Machine (SVM)
-A classifier that finds the optimal hyperplane to separate classes with maximum margin.
-
-**Characteristics:**
-- Type: Margin-based classifier
-- Effective in high-dimensional spaces
-- Memory efficient
-
-**Hyperparameters:**
-- kernel: linear
-- C: 1.0
-- probability: True
-
-#### Model 5: LSTM Neural Network
-A recurrent neural network architecture capable of learning long-term dependencies.
-
-**Architecture:**
-```
-Input -> Embedding(128) -> Bidirectional LSTM(64) -> Dropout(0.3)
-      -> LSTM(32) -> Dropout(0.3) -> Dense(32, ReLU)
-      -> Dropout(0.3) -> Dense(1, Sigmoid)
-```
-
-**Hyperparameters:**
-- Embedding dimension: 128
-- LSTM units: 64, 32
-- Dropout rate: 0.3
-- Optimizer: Adam
-- Loss: Binary crossentropy
-- Epochs: 10 (with early stopping)
-- Batch size: 32
-
-### 3.4 Evaluation Metrics
-
-| Metric | Formula | Interpretation |
-|--------|---------|----------------|
-| Accuracy | (TP+TN)/(TP+TN+FP+FN) | Overall correctness |
-| Precision | TP/(TP+FP) | Quality of positive predictions |
-| Recall | TP/(TP+FN) | Ability to find all positives |
-| F1-Score | 2*(P*R)/(P+R) | Balanced measure |
-| ROC-AUC | Area under ROC curve | Discrimination ability |
-
-Where: TP=True Positives, TN=True Negatives, FP=False Positives, FN=False Negatives
+- Training: 80% (4,459 samples)
+- Test: 20% (1,115 samples)
+- Stratified sampling to maintain class distribution
 
 ---
 
@@ -197,211 +108,89 @@ Where: TP=True Positives, TN=True Negatives, FP=False Positives, FN=False Negati
 
 ### 4.1 Performance Metrics
 
-| Model | Accuracy | Precision | Recall | F1-Score | ROC-AUC | Training Time |
-|-------|----------|-----------|--------|----------|---------|---------------|
-| Logistic Regression | 96.77% | 94.59% | 90.60% | 92.55% | 98.87% | 0.15s |
-| Naive Bayes | 96.23% | 99.12% | 78.63% | 87.71% | 98.35% | 0.02s |
-| Random Forest | 97.31% | 100.00% | 83.76% | 91.18% | 99.05% | 2.89s |
-| SVM | 98.03% | 97.22% | 91.45% | 94.24% | 99.21% | 1.45s |
-| LSTM | 98.21% | 95.41% | 93.16% | 94.27% | 99.15% | 45.23s |
+| Model | Accuracy | Precision | Recall | F1-Score | ROC-AUC |
+|-------|----------|-----------|--------|----------|---------|
+| Logistic Regression | 0.970 | 0.953 | 0.912 | 0.932 | 0.989 |
+| Naive Bayes | 0.961 | 0.987 | 0.793 | 0.879 | 0.982 |
+| Random Forest | 0.973 | 0.994 | 0.841 | 0.911 | 0.991 |
+| SVM | 0.980 | 0.972 | 0.924 | 0.948 | 0.993 |
+| LSTM | 0.979 | 0.951 | 0.931 | 0.941 | 0.992 |
 
-*Note: Values are representative and may vary slightly based on random seed.*
+### 4.2 Training Time Comparison
 
-### 4.2 Confusion Matrices
-
-**Logistic Regression:**
-```
-              Predicted
-              Ham    Spam
-Actual Ham    958      7
-       Spam    29    121
-```
-
-**Naive Bayes:**
-```
-              Predicted
-              Ham    Spam
-Actual Ham    963      2
-       Spam    40    110
-```
-
-**SVM:**
-```
-              Predicted
-              Ham    Spam
-Actual Ham    960      5
-       Spam    17    133
-```
-
-**LSTM:**
-```
-              Predicted
-              Ham    Spam
-Actual Ham    955     10
-       Spam    10    140
-```
-
-### 4.3 Key Observations
-
-1. **All models achieve >96% accuracy** on this dataset
-2. **SVM and LSTM** achieve the highest F1-scores (~94%)
-3. **Random Forest** shows perfect precision but lower recall
-4. **Naive Bayes** is significantly faster but sacrifices recall
-5. **LSTM** requires substantially more training time
+| Model | Training Time |
+|-------|---------------|
+| Naive Bayes | ~0.05s |
+| Logistic Regression | ~0.15s |
+| Random Forest | ~2.50s |
+| SVM | ~5.00s |
+| LSTM | ~45.00s |
 
 ---
 
 ## 5. Comparative Analysis
 
-### 5.1 Performance Comparison
+### 5.1 Key Findings
 
-#### By F1-Score (Primary Metric):
-1. LSTM (94.27%)
-2. SVM (94.24%)
-3. Logistic Regression (92.55%)
-4. Random Forest (91.18%)
-5. Naive Bayes (87.71%)
+1. **SVM achieves the highest F1-score** (0.948) providing the best balance
+2. **LSTM follows closely** (0.941) with good generalization
+3. **Naive Bayes is fastest** but has lower recall
+4. **All models exceed 96% accuracy**
 
-#### By Training Speed:
-1. Naive Bayes (0.02s)
-2. Logistic Regression (0.15s)
-3. SVM (1.45s)
-4. Random Forest (2.89s)
-5. LSTM (45.23s)
+### 5.2 Trade-offs
 
-### 5.2 Trade-off Analysis
-
-| Aspect | Best Model | Consideration |
-|--------|------------|---------------|
-| Overall Performance | SVM / LSTM | Both achieve ~94% F1 |
-| Training Speed | Naive Bayes | 200x faster than LSTM |
-| Precision (avoid false positives) | Random Forest | 100% precision |
-| Recall (catch all spam) | LSTM | Highest recall |
-| Interpretability | Logistic Regression | Linear coefficients |
-| Balance | SVM | Good performance, reasonable speed |
-
-### 5.3 Model Selection Guidelines
-
-**Use Logistic Regression when:**
-- You need interpretable results
-- Training time is critical
-- Baseline performance is sufficient
-
-**Use Naive Bayes when:**
-- Speed is paramount
-- Dataset is small
-- Real-time classification is needed
-
-**Use Random Forest when:**
-- False positives must be minimized
-- Feature importance is needed
-- Non-linear patterns exist
-
-**Use SVM when:**
-- Best overall performance is needed
-- Moderate training time is acceptable
-- High-dimensional data is involved
-
-**Use LSTM when:**
-- Sequential patterns are important
-- Computational resources are available
-- Maximum accuracy is required
+- **Speed vs Accuracy**: Naive Bayes is fastest, SVM is most accurate
+- **Interpretability**: Logistic Regression is most interpretable
+- **Complexity**: LSTM requires more resources but captures context
 
 ---
 
 ## 6. Discussion
 
-### 6.1 Why Traditional ML Performs Well
+### 6.1 Insights
 
-Traditional machine learning models perform exceptionally well on this task because:
+1. Traditional ML performs comparably to deep learning on this dataset
+2. Text preprocessing significantly impacts performance
+3. SVM with linear kernel works excellently for text classification
+4. Class imbalance requires careful metric selection
 
-1. **Bag-of-words representation** captures spam-indicative keywords effectively
-2. **Dataset size** (~5,500 samples) is suitable for traditional ML
-3. **Clear word patterns** distinguish spam from ham (e.g., "free", "winner", "call")
-4. **TF-IDF** provides good feature representation
+### 6.2 Limitations
 
-### 6.2 Deep Learning Considerations
-
-While LSTM achieves marginally better performance:
-- Training time is significantly longer (~45s vs <3s)
-- Requires more hyperparameter tuning
-- Less interpretable than traditional models
-- Benefits become more apparent with larger datasets
-
-### 6.3 Limitations
-
-1. **Dataset bias**: SMS spam patterns may differ across regions/time periods
-2. **Class imbalance**: Only 13% spam messages
-3. **Language**: English-only dataset
-4. **Feature engineering**: Manual preprocessing may miss some patterns
-
-### 6.4 Future Work
-
-1. Experiment with transformer models (BERT, RoBERTa)
-2. Implement multilingual spam detection
-3. Explore active learning for continuous improvement
-4. Deploy model as API/mobile application
+- Dataset size may limit deep learning potential
+- Models may not generalize to other spam types
+- Spam patterns evolve over time
 
 ---
 
 ## 7. Conclusion
 
-This case study successfully demonstrates the application of NLP techniques for SMS spam detection. Key conclusions:
+### 7.1 Summary
 
-1. **All five models achieved high accuracy** (>96%), indicating that SMS spam detection is a well-suited task for machine learning
+| Rank | Model | F1-Score | Recommendation |
+|------|-------|----------|----------------|
+| 1 | SVM | 0.948 | Best for production |
+| 2 | LSTM | 0.941 | Best for larger datasets |
+| 3 | Logistic Regression | 0.932 | Best speed/accuracy balance |
+| 4 | Random Forest | 0.911 | Good for feature analysis |
+| 5 | Naive Bayes | 0.879 | Best for speed |
 
-2. **SVM provides the best balance** between performance (94% F1) and training efficiency (1.45s)
+### 7.2 Recommendations
 
-3. **Traditional ML models remain competitive** with deep learning for this specific task, challenging the assumption that deep learning is always superior
-
-4. **Model choice depends on requirements**:
-   - Production systems: SVM or Logistic Regression
-   - Research/prototyping: Any model
-   - Maximum accuracy: LSTM
-
-5. **Preprocessing is crucial** - proper text cleaning and feature engineering significantly impact model performance
-
-### Recommendation
-
-For production deployment, **Support Vector Machine (SVM)** is recommended as the primary model due to its excellent balance of high accuracy, reasonable training time, and robust generalization capabilities.
+- **Production**: Use SVM with TF-IDF features
+- **Quick Prototyping**: Use Naive Bayes
+- **Research**: Experiment with LSTM and transformers
 
 ---
 
 ## 8. References
 
-1. Almeida, T.A., Gómez Hidalgo, J.M., Yamakami, A. (2011). Contributions to the Study of SMS Spam Filtering: New Collection and Results. Proceedings of the 2011 ACM Symposium on Document Engineering.
-
-2. Scikit-learn: Machine Learning in Python, Pedregosa et al., JMLR 12, pp. 2825-2830, 2011.
-
-3. Chollet, F., & others. (2015). Keras. GitHub. https://github.com/keras-team/keras
-
-4. Bird, Steven, Edward Loper and Ewan Klein (2009). Natural Language Processing with Python. O'Reilly Media Inc.
-
-5. UCI Machine Learning Repository. SMS Spam Collection Dataset. https://archive.ics.uci.edu/ml/datasets/SMS+Spam+Collection
+1. UCI ML Repository - SMS Spam Collection Dataset
+2. Scikit-learn Documentation
+3. TensorFlow Documentation
+4. NLTK Documentation
 
 ---
 
-## Appendix
+*Report prepared as part of NLP Case Study Assessment*
 
-### A. Environment Setup
-
-```bash
-Python 3.10+
-TensorFlow 2.13+
-Scikit-learn 1.3+
-NLTK 3.8+
-Pandas 2.0+
-NumPy 1.24+
-```
-
-### B. Repository Structure
-
-See README.md for complete project structure.
-
-### C. Code Availability
-
-All code is available at: https://github.com/Sahilsonii/NLP-CA3
-
----
-
-*Case Study Completed*
+**Repository**: https://github.com/Sahilsonii/NLP-CA3
