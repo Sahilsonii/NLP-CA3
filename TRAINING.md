@@ -57,6 +57,24 @@ python -c "import nltk; nltk.download('stopwords'); nltk.download('punkt'); nltk
 
 ### 5. Download the SMS Spam Dataset
 
+**Automated Download (Recommended)**
+
+Use the provided download script:
+
+```bash
+python download_dataset.py
+```
+
+This script will:
+- Try to download from Kaggle API (if credentials are configured)
+- Fall back to alternative download source if needed
+- Automatically place the file in `data/raw/spam.csv`
+- Verify the dataset integrity
+
+**Manual Download Options**
+
+If automatic download doesn't work:
+
 **Option 1: Kaggle (Recommended)**
 
 1. Visit: https://www.kaggle.com/datasets/uciml/sms-spam-collection-dataset
@@ -70,12 +88,18 @@ python -c "import nltk; nltk.download('stopwords'); nltk.download('punkt'); nltk
 3. Extract and rename to `spam.csv`
 4. Place it in `data/raw/spam.csv`
 
-**Option 3: Alternative Download**
+**Kaggle API Setup (Optional)**
 
-```bash
-# Using wget (if available)
-wget -O data/raw/spam.csv https://raw.githubusercontent.com/mohitgupta-omg/Kaggle-SMS-Spam-Collection-Dataset-/master/spam.csv
-```
+To use Kaggle API for faster downloads:
+
+1. Create Kaggle account at https://www.kaggle.com/
+2. Go to Account Settings → API
+3. Click "Create New Token" → downloads `kaggle.json`
+4. Place `kaggle.json` in:
+   - Windows: `C:\Users\<username>\.kaggle\kaggle.json`
+   - Linux/Mac: `~/.kaggle/kaggle.json`
+5. Linux/Mac only: `chmod 600 ~/.kaggle/kaggle.json`
+6. Run: `python download_dataset.py`
 
 ### 6. Verify Dataset
 

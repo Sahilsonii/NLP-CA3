@@ -56,7 +56,7 @@ echo "✓ Dependencies installed"
 echo
 
 # Step 5: Download NLTK data
-echo "[5/5] Downloading NLTK data..."
+echo "[5/6] Downloading NLTK data..."
 python -c "
 import nltk
 import sys
@@ -71,20 +71,25 @@ for package in packages:
 "
 echo
 
+# Step 6: Download SMS Spam dataset
+echo "[6/6] Downloading SMS Spam dataset..."
+python download_dataset.py
+echo
+
 # Final instructions
 echo "=========================================="
 echo "Setup Complete!"
 echo "=========================================="
 echo
-echo "Next steps:"
-echo "1. Download the SMS Spam dataset:"
-echo "   https://www.kaggle.com/datasets/uciml/sms-spam-collection-dataset"
+echo "Everything is ready! You can now start training:"
 echo
-echo "2. Place spam.csv in: data/raw/spam.csv"
+echo "Option 1 - Jupyter Notebooks (Recommended for learning):"
+echo "  jupyter notebook"
+echo "  Then run notebooks in order: 01, 02, 03, 04"
 echo
-echo "3. Start training:"
-echo "   - For notebooks: jupyter notebook"
-echo "   - For scripts: python src/models.py"
+echo "Option 2 - Python Scripts (For production):"
+echo "  cd src"
+echo "  python models.py"
 echo
 echo "For detailed instructions, see TRAINING.md"
 echo

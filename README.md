@@ -72,7 +72,8 @@ This will:
 - Create virtual environment
 - Install all dependencies
 - Download NLTK data
-- Provide next steps
+- Download SMS Spam dataset automatically
+- Setup complete - ready to train!
 
 ### Manual Installation
 
@@ -103,6 +104,13 @@ nltk.download('punkt_tab')
 ```
 
 ### 5. Download Dataset
+
+**Automatic (Recommended):**
+```bash
+python download_dataset.py
+```
+
+**Manual:**
 Download the SMS Spam Collection dataset and place it in `data/raw/spam.csv`:
 - From [Kaggle](https://www.kaggle.com/datasets/uciml/sms-spam-collection-dataset)
 - Or use the UCI ML Repository
