@@ -61,20 +61,37 @@ class SpamDetector:
     def train(self, X_train, y_train, **kwargs):
         print(f"Training {self.model_type}...")
         start_time = time.time()
-        
+
         if self.model_type == "lstm":
             vocab_size = kwargs.get("vocab_size", 10000)
             max_length = kwargs.get("max_length", 100)
             epochs = kwargs.get("epochs", 10)
             batch_size = kwargs.get("batch_size", 32)
-            
+
             self._build_lstm(vocab_size, max_length=max_length)
+
+            # Calculate class weights for imbalanced dataset
+            from sklearn.utils.class_weight import compute_class_weight
+            classes = np.unique(y_train)
+            weights = compute_class_weight('balanced', classes=classes, y=y_train)
+            class_weight = {i: w for i, w in zip(classes, weights)}
+
             early_stop = EarlyStopping(monitor="val_loss", patience=3, restore_best_weights=True)
-            self.history = self.model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size,
-                                         validation_split=0.1, callbacks=[early_stop], verbose=1)
+            print(f"Input shape: {X_train.shape}, Label shape: {y_train.shape}")
+            print(f"Y unique values: {np.unique(y_train)}")
+            print(f"Class weights: {class_weight}")
+            self.history = self.model.fit(
+                X_train, y_train,
+                epochs=epochs,
+                batch_size=batch_size,
+                validation_split=0.1,
+                class_weight=class_weight,
+                callbacks=[early_stop],
+                verbose=1
+            )
         else:
             self.model.fit(X_train, y_train)
-        
+
         self.training_time = time.time() - start_time
         self.is_trained = True
         print(f"Training completed in {self.training_time:.2f} seconds")
@@ -82,7 +99,12 @@ class SpamDetector:
     def predict(self, X_test):
         if self.model_type == "lstm":
             predictions = self.model.predict(X_test, verbose=0)
-            return (predictions > 0.5).astype(int).flatten()
+            y_pred = (predictions > 0.5).astype(int).flatten()
+            # Debug info
+            unique_preds = np.unique(predictions)
+            print(f"   Debug LSTM predictions: min={unique_preds.min():.4f}, max={unique_preds.max():.4f}, mean={unique_preds.mean():.4f}")
+            print(f"   Predictions distribution: 0={np.sum(y_pred==0)}, 1={np.sum(y_pred==1)}")
+            return y_pred
         return self.model.predict(X_test)
     
     def predict_proba(self, X_test):

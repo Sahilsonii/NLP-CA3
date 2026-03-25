@@ -50,8 +50,7 @@ def calculate_metrics(y_true, y_pred, y_pred_proba=None):
 
 def print_metrics(metrics, model_name="Model"):
     """Print metrics in a formatted way."""
-    print(f"
-{'='*50}")
+    print(f"\n{'='*50}")
     print(f"Results for {model_name}")
     print(f"{'='*50}")
     for metric, value in metrics.items():
