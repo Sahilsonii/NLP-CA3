@@ -46,12 +46,35 @@ NLP-CA3/
 ├── models/
 │   └── saved_models/                 # Trained model files
 ├── requirements.txt                  # Python dependencies
+├── setup.sh                          # Linux/Mac setup script
+├── setup.bat                         # Windows setup script
 ├── README.md                         # This file
+├── TRAINING.md                       # Training guide
 ├── REPORT.md                         # Case study report
 └── LICENSE
 ```
 
-## Installation
+## Quick Start
+
+### Automated Setup (Recommended)
+
+Run the setup script to automatically configure the environment:
+
+```bash
+# Linux/Mac
+./setup.sh
+
+# Windows
+setup.bat
+```
+
+This will:
+- Create virtual environment
+- Install all dependencies
+- Download NLTK data
+- Provide next steps
+
+### Manual Installation
 
 ### 1. Clone the Repository
 ```bash
@@ -83,6 +106,8 @@ nltk.download('punkt_tab')
 Download the SMS Spam Collection dataset and place it in `data/raw/spam.csv`:
 - From [Kaggle](https://www.kaggle.com/datasets/uciml/sms-spam-collection-dataset)
 - Or use the UCI ML Repository
+
+**📖 For detailed training instructions, see [TRAINING.md](TRAINING.md)**
 
 ## Usage
 
