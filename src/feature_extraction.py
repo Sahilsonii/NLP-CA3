@@ -103,16 +103,17 @@ class SequenceExtractor:
     Converts text into sequences of integers for LSTM/RNN models.
     """
     
-    def __init__(self, max_words=10000, max_length=100):
+    def __init__(self, max_words=10000, max_length=100, max_len=None):
         """
         Initialize Sequence Extractor.
         
         Parameters:
             max_words (int): Maximum vocabulary size
             max_length (int): Maximum sequence length (padding)
+            max_len (int): Backward-compatible alias for max_length
         """
         self.max_words = max_words
-        self.max_length = max_length
+        self.max_length = max_len if max_len is not None else max_length
         self.tokenizer = Tokenizer(num_words=max_words, oov_token="<OOV>")
         self.is_fitted = False
     

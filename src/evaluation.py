@@ -31,11 +31,14 @@ def calculate_metrics(y_true, y_pred, y_pred_proba=None):
     Returns:
         dict: Dictionary of metrics
     """
+    f1 = f1_score(y_true, y_pred, zero_division=0)
     metrics = {
         "accuracy": accuracy_score(y_true, y_pred),
-        "precision": precision_score(y_true, y_pred),
-        "recall": recall_score(y_true, y_pred),
-        "f1_score": f1_score(y_true, y_pred)
+        "precision": precision_score(y_true, y_pred, zero_division=0),
+        "recall": recall_score(y_true, y_pred, zero_division=0),
+        "f1_score": f1,
+        # Backward-compatible alias for older callers.
+        "f1": f1,
     }
     
     if y_pred_proba is not None:

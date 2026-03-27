@@ -7,6 +7,7 @@ Trains all 5 models and evaluates their performance
 
 import os
 import sys
+import argparse
 import warnings
 import pandas as pd
 import numpy as np
@@ -39,20 +40,71 @@ def print_header(text):
     print("=" * 70)
 
 
+def parse_args():
+    """Parse command-line options for training verbosity."""
+    parser = argparse.ArgumentParser(
+        description="Train and evaluate SMS spam detection models."
+    )
+    parser.add_argument(
+        "--sklearn-verbose",
+        type=int,
+        default=1,
+        help="Native verbosity level for supported sklearn models. Use 0 to disable.",
+    )
+    parser.add_argument(
+        "--lstm-verbose",
+        type=int,
+        default=2,
+        choices=[0, 1, 2],
+        help="Keras verbosity for LSTM training: 0=silent, 1=progress bar, 2=one line per epoch.",
+    )
+    return parser.parse_args()
+
+
+def get_metric(metrics, key):
+    """Return a metric value with backward-compatible aliases."""
+    aliases = {
+        "f1_score": ("f1_score", "f1"),
+        "f1": ("f1", "f1_score"),
+    }
+
+    for candidate in aliases.get(key, (key,)):
+        if candidate in metrics:
+            return metrics[candidate]
+
+    raise KeyError(key)
+
+
 def print_model_results(model_name, metrics, training_time):
     """Print model performance metrics"""
+    f1_value = get_metric(metrics, "f1_score")
     print(f"\n📊 {model_name} Results:")
     print(f"   Accuracy:  {metrics['accuracy']:.4f} ({metrics['accuracy']*100:.2f}%)")
     print(f"   Precision: {metrics['precision']:.4f} ({metrics['precision']*100:.2f}%)")
     print(f"   Recall:    {metrics['recall']:.4f} ({metrics['recall']*100:.2f}%)")
-    print(f"   F1-Score:  {metrics['f1_score']:.4f} ({metrics['f1_score']*100:.2f}%)")
+    print(f"   F1-Score:  {f1_value:.4f} ({f1_value*100:.2f}%)")
     if 'roc_auc' in metrics:
         print(f"   ROC-AUC:   {metrics['roc_auc']:.4f}")
     print(f"   ⏱️  Training time: {training_time:.2f} seconds")
 
 
+def print_training_diagnostics(model_name, diagnostics):
+    """Print structured training details."""
+    if not diagnostics:
+        return
+
+    print(f"   Training details for {model_name}:")
+    for key, value in diagnostics.items():
+        label = key.replace("_", " ").title()
+        if isinstance(value, float):
+            print(f"   - {label}: {value:.4f}")
+        else:
+            print(f"   - {label}: {value}")
+
+
 def main():
     """Main training pipeline"""
+    args = parse_args()
 
     print_header("🚀 SMS Spam Detection - Model Training Pipeline")
 
@@ -128,12 +180,43 @@ def main():
 
     # Step 5: Train models
     print_header("[5/6] 🎯 Training Models")
+    print("Traditional ML models do not train in epochs, so the script reports solver/tree diagnostics for them.")
+    print("The LSTM will print one summary line per epoch so you can track training and validation metrics clearly.\n")
+    if args.sklearn_verbose > 0:
+        print(f"Native sklearn verbose logging is enabled at level {args.sklearn_verbose}.")
+    else:
+        print("Native sklearn verbose logging is disabled.")
+    print(f"LSTM verbose mode is set to {args.lstm_verbose}.\n")
 
     models_config = [
-        ("logistic_regression", "Logistic Regression", X_train_tfidf, X_test_tfidf, {}),
-        ("naive_bayes", "Multinomial Naive Bayes", X_train_tfidf, X_test_tfidf, {}),
-        ("random_forest", "Random Forest", X_train_tfidf, X_test_tfidf, {}),
-        ("svm", "Support Vector Machine", X_train_tfidf, X_test_tfidf, {}),
+        (
+            "logistic_regression",
+            "Logistic Regression",
+            X_train_tfidf,
+            X_test_tfidf,
+            {"sklearn_verbose": args.sklearn_verbose},
+        ),
+        (
+            "naive_bayes",
+            "Multinomial Naive Bayes",
+            X_train_tfidf,
+            X_test_tfidf,
+            {"sklearn_verbose": args.sklearn_verbose},
+        ),
+        (
+            "random_forest",
+            "Random Forest",
+            X_train_tfidf,
+            X_test_tfidf,
+            {"sklearn_verbose": args.sklearn_verbose},
+        ),
+        (
+            "svm",
+            "Support Vector Machine",
+            X_train_tfidf,
+            X_test_tfidf,
+            {"sklearn_verbose": args.sklearn_verbose},
+        ),
     ]
 
     results = {}
@@ -145,6 +228,7 @@ def main():
         try:
             detector = SpamDetector(model_type=model_type)
             detector.train(X_tr, y_train.values, **kwargs)
+            print_training_diagnostics(model_name, detector.get_training_diagnostics())
 
             # Predict
             y_pred = detector.predict(X_te)
@@ -177,8 +261,11 @@ def main():
             vocab_size=vocab_size,
             max_length=X_train_seq.shape[1],
             epochs=10,
-            batch_size=32
+            batch_size=32,
+            verbose=args.lstm_verbose,
+            use_class_weight=False,
         )
+        print_training_diagnostics("LSTM Neural Network", detector.get_training_diagnostics())
 
         # Predict
         y_pred = detector.predict(X_test_seq)
@@ -228,6 +315,15 @@ def main():
     except Exception as e:
         print(f"   ❌ Error saving extractors: {e}")
 
+    if "LSTM Neural Network" in trained_models:
+        detector = trained_models["LSTM Neural Network"]
+        if detector.history is not None:
+            history_dir = Path("results/metrics")
+            history_dir.mkdir(parents=True, exist_ok=True)
+            history_path = history_dir / "lstm_training_history.csv"
+            pd.DataFrame(detector.history.history).to_csv(history_path, index_label="epoch")
+            print(f"   ✓ Saved LSTM training history to {history_path}")
+
     # Final summary
     print_header("📊 Training Complete - Model Comparison")
 
@@ -237,18 +333,20 @@ def main():
         print("=" * 90)
 
         for model_name, metrics in results.items():
+            f1_value = get_metric(metrics, "f1_score")
             print(f"{model_name:<30} "
                   f"{metrics['accuracy']:.4f} ({metrics['accuracy']*100:>5.2f}%)  "
                   f"{metrics['precision']:.4f} ({metrics['precision']*100:>5.2f}%)  "
                   f"{metrics['recall']:.4f} ({metrics['recall']*100:>5.2f}%)  "
-                  f"{metrics['f1_score']:.4f} ({metrics['f1_score']*100:>5.2f}%)")
+                  f"{f1_value:.4f} ({f1_value*100:>5.2f}%)")
 
         print("=" * 90)
 
         # Find best model
-        best_model = max(results.items(), key=lambda x: x[1]['f1_score'])
+        best_model = max(results.items(), key=lambda x: get_metric(x[1], "f1_score"))
         print(f"\n🏆 Best Model: {best_model[0]}")
-        print(f"   F1-Score: {best_model[1]['f1_score']:.4f} ({best_model[1]['f1_score']*100:.2f}%)")
+        best_f1 = get_metric(best_model[1], "f1_score")
+        print(f"   F1-Score: {best_f1:.4f} ({best_f1*100:.2f}%)")
         print(f"   Accuracy: {best_model[1]['accuracy']:.4f} ({best_model[1]['accuracy']*100:.2f}%)")
 
     print("\n✅ Training pipeline completed successfully!")
