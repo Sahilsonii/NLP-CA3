@@ -37,6 +37,13 @@
 
 \listfiles
 
+% Configure section numbering to use Roman numerals - force after document starts
+\AtBeginDocument{%
+  \renewcommand{\thesection}{\Roman{section}}%
+  \renewcommand{\thesubsection}{\thesection.\Alph{subsection}}%
+  \renewcommand{\thesubsubsection}{\thesubsection.\arabic{subsubsection}}%
+}
+
 \begin{document}
 
 %
@@ -107,9 +114,13 @@ Random Forest and other ensemble methods combine multiple decision trees to impr
 
 \subsection{Deep Learning Approaches}
 
-LSTM networks address the sequential nature of text by maintaining long-term dependencies through gating mechanisms~\cite{hochreiter1997}. Unlike traditional bag-of-words approaches, LSTMs capture contextual information and word order, potentially improving classification accuracy for complex messages.
+LSTM networks address the sequential nature of text by maintaining long-term dependencies through gating mechanisms~\cite{hochreiter1997}. Unlike traditional bag-of-words approaches, LSTMs capture contextual information and word order, potentially improving classification accuracy for complex messages. Bidirectional LSTMs further enhance performance by processing sequences in both directions~\cite{graves2013}, capturing richer contextual information from SMS text.
 
-For imbalanced datasets like spam detection, accuracy alone is insufficient~\cite{chawla2002}. Precision-recall trade-offs, F1-score, and ROC-AUC provide more comprehensive performance assessment, especially when costs of false positives and false negatives differ.
+Modern NLP systems leverage distributed word representations that capture semantic relationships~\cite{mikolov2013}. Embeddings like Word2Vec provide dense vector representations encoding semantic similarity between words.
+
+Effective feature extraction is critical for text classification~\cite{aggarwal2012}. TF-IDF weighting schemes balance term frequency with document frequency, emphasizing discriminative terms. N-gram features capture both individual words and common phrases, improving spam pattern detection.
+
+For imbalanced datasets like spam detection, accuracy alone is insufficient~\cite{chawla2002}. Precision-recall trade-offs, F1-score, and ROC-AUC provide comprehensive performance assessment. The F1-score balances precision and recall, preventing models from trivially achieving high accuracy by predicting the majority class.
 
 \section{METHODOLOGY}
 
@@ -174,16 +185,68 @@ Naive Bayes & 0.965 & 0.991 & 0.745 & 0.851 & 0.978 \\
 
 LSTM achieved the highest accuracy (98.03\%) and F1-score (0.9241), demonstrating the effectiveness of deep learning for capturing sequential patterns in SMS text. Random Forest achieved perfect precision (100\%) with zero false positives, making it ideal for applications where false alarms are costly. Random Forest also achieved the highest ROC-AUC (0.9862), indicating superior discriminative ability across all threshold values. LSTM demonstrated the best recall (89.93\%), correctly identifying the most spam messages. Traditional ML models (SVM, Random Forest) performed competitively with LSTM whilst requiring significantly less training time.
 
-\subsection{Confusion Matrix Analysis}
+\subsection{Detailed Confusion Matrix Analysis}
 
-Figure~\ref{fig:cm_lstm} shows the LSTM confusion matrix revealing: 959 true negatives (ham correctly classified), 134 true positives (spam correctly detected), 7 false positives (ham misclassified as spam), and 15 false negatives (spam missed).
+Confusion matrices provide critical insights into model performance by revealing the distribution of correct and incorrect predictions across both classes. For our imbalanced dataset (966 ham, 149 spam in test set), analyzing false positives (legitimate messages flagged as spam) and false negatives (spam missed) is essential for understanding real-world deployment implications.
+
+\subsubsection{LSTM Model Performance}
+
+Figure~\ref{fig:cm_lstm} presents the confusion matrix for the LSTM model, which achieved the best overall F1-score (0.9241). The matrix reveals: \textbf{959 true negatives} (99.3\% of ham correctly classified), \textbf{134 true positives} (89.9\% of spam correctly detected), \textbf{7 false positives} (0.7\% of ham misclassified as spam), and \textbf{15 false negatives} (10.1\% of spam missed). The low false positive rate indicates the model rarely disrupts users with incorrect spam warnings, whilst the 89.9\% recall demonstrates strong spam detection capability. The 15 missed spam messages likely represent sophisticated phishing attempts or messages with minimal promotional language.
 
 \begin{figure}[!htb]
     \centering
     \includegraphics[width=\columnwidth]{results/confusion_matrices/lstm_cm.png}
-    \caption{Confusion matrix for LSTM model (best overall).}
+    \caption{LSTM confusion matrix: best F1-score and recall.}
     \label{fig:cm_lstm}
 \end{figure}
+
+\subsubsection{Support Vector Machine Performance}
+
+Figure~\ref{fig:cm_svm} shows the SVM confusion matrix, demonstrating competitive performance with LSTM. The matrix displays: \textbf{963 true negatives} (99.7\% ham accuracy), \textbf{129 true positives} (86.6\% spam recall), \textbf{3 false positives} (0.3\% ham misclassified), and \textbf{20 false negatives} (13.4\% spam missed). SVM achieved the second-best precision (97.7\%) with only 3 false positives, making it highly reliable for minimizing user disruption. However, the 20 missed spam messages indicate slightly lower sensitivity compared to LSTM. The linear kernel's effectiveness demonstrates that spam patterns are largely linearly separable in TF-IDF feature space.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=\columnwidth]{results/confusion_matrices/svm_cm.png}
+    \caption{SVM confusion matrix: excellent precision with minimal false alarms.}
+    \label{fig:cm_svm}
+\end{figure}
+
+\subsubsection{Random Forest Performance}
+
+Figure~\ref{fig:cm_rf} presents the Random Forest confusion matrix, notable for achieving perfect precision (100\%). The distribution shows: \textbf{966 true negatives} (100\% of ham correctly classified), \textbf{122 true positives} (81.9\% spam detected), \textbf{0 false positives} (no legitimate messages flagged), and \textbf{27 false negatives} (18.1\% spam missed). The zero false positives represent a remarkable achievement—no legitimate messages were incorrectly flagged as spam, ensuring optimal user experience with no unwanted disruptions. However, the trade-off is evident in the 27 missed spam messages, resulting in lower recall (81.9\%) compared to LSTM and SVM. Random Forest's ensemble voting mechanism appears to favor conservative classification, ideal for applications where false alarms are more costly than occasional missed spam.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=\columnwidth]{results/confusion_matrices/random_forest_cm.png}
+    \caption{Random Forest confusion matrix: perfect precision, zero false positives.}
+    \label{fig:cm_rf}
+\end{figure}
+
+\subsubsection{Logistic Regression Performance}
+
+Figure~\ref{fig:cm_lr} displays the Logistic Regression confusion matrix, showing strong precision but more conservative recall. The matrix contains: \textbf{964 true negatives} (99.8\% ham accuracy), \textbf{114 true positives} (76.5\% spam recall), \textbf{2 false positives} (0.2\% ham misclassified), and \textbf{35 false negatives} (23.5\% spam missed). Logistic Regression achieved excellent precision (98.3\%) with only 2 false positives, demonstrating reliable spam identification when flagged. However, the 35 missed spam messages represent the second-highest false negative count, indicating the linear decision boundary may struggle with complex, non-linear spam patterns. The model's interpretability (feature coefficients directly indicate spam indicators) makes it valuable for understanding which features drive predictions, despite lower recall compared to LSTM and SVM.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=\columnwidth]{results/confusion_matrices/logistic_regression_cm.png}
+    \caption{Logistic Regression confusion matrix: high precision, interpretable features.}
+    \label{fig:cm_lr}
+\end{figure}
+
+\subsubsection{Naive Bayes Performance}
+
+Figure~\ref{fig:cm_nb} shows the Naive Bayes confusion matrix, representing the baseline probabilistic approach. The distribution reveals: \textbf{965 true negatives} (99.9\% ham accuracy), \textbf{111 true positives} (74.5\% spam recall), \textbf{1 false positive} (0.1\% ham misclassified), and \textbf{38 false negatives} (25.5\% spam missed). Naive Bayes achieved exceptional precision (99.1\%) with only a single false positive, demonstrating the effectiveness of probabilistic reasoning for spam identification. However, the 38 missed spam messages represent the highest false negative count among all models, resulting in the lowest recall (74.5\%). The conditional independence assumption may limit its ability to capture complex word interactions and contextual patterns that indicate spam. Despite lower recall, Naive Bayes remains valuable for rapid prototyping and baseline comparisons due to its simplicity, fast training time, and strong precision.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=\columnwidth]{results/confusion_matrices/naive_bayes_cm.png}
+    \caption{Naive Bayes confusion matrix: baseline performance with high precision.}
+    \label{fig:cm_nb}
+\end{figure}
+
+\subsubsection{Comparative Analysis}
+
+Across all five confusion matrices, three critical patterns emerge: (1) \textbf{False Positive Rates}: All models maintain excellent precision with FP rates below 1\%, indicating strong ability to avoid disrupting legitimate messages. Random Forest's zero false positives stands out, followed by Naive Bayes (1 FP), Logistic Regression (2 FP), SVM (3 FP), and LSTM (7 FP). (2) \textbf{False Negative Rates}: Spam detection capability varies significantly, with LSTM achieving best recall (15 FN, 10.1\% missed), followed by SVM (20 FN, 13.4\%), Random Forest (27 FN, 18.1\%), Logistic Regression (35 FN, 23.5\%), and Naive Bayes (38 FN, 25.5\%). (3) \textbf{Precision-Recall Trade-off}: Random Forest and Naive Bayes prioritize precision over recall, whilst LSTM balances both metrics effectively for optimal F1-score.
 
 \subsection{Performance Comparison}
 
@@ -209,6 +272,55 @@ Figure~\ref{fig:roc} demonstrates that all models achieve excellent ROC-AUC scor
 
 Model selection depends on application requirements: (1) \textbf{Production Deployment}: LSTM (best F1-score 0.9241, highest recall 89.93\%); (2) \textbf{Minimal False Alarms}: Random Forest (perfect precision 100\%, zero false positives); (3) \textbf{Quick Prototyping}: Naive Bayes (fastest training, simple implementation); (4) \textbf{Balanced Performance}: SVM (strong F1-score 0.9181, excellent ROC-AUC); (5) \textbf{Interpretability}: Logistic Regression (linear coefficients, feature importance).
 
+\section{COMPREHENSIVE MODEL COMPARISON}
+
+This section synthesizes all experimental results through comprehensive visualizations, providing a holistic view of model performance across multiple evaluation dimensions.
+
+\subsection{Unified Confusion Matrix Comparison}
+
+Figure~\ref{fig:all_cm} presents all five confusion matrices in a unified visualization, enabling direct visual comparison of prediction patterns. The side-by-side layout reveals the precision-recall trade-offs across models: LSTM demonstrates balanced performance with moderate false positives (7) and low false negatives (15), achieving the best F1-score. SVM shows similar balance with fewer false positives (3) but slightly more false negatives (20). Random Forest exhibits the most conservative classification with zero false positives but 27 false negatives, prioritizing precision over recall. Logistic Regression and Naive Bayes display similar conservative patterns with 2 and 1 false positives respectively, but higher false negative counts (35 and 38) indicating more cautious spam detection.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=\columnwidth]{results/plots/all_confusion_matrices.png}
+    \caption{Side-by-side comparison of all five model confusion matrices.}
+    \label{fig:all_cm}
+\end{figure}
+
+The unified view highlights a clear trend: traditional machine learning models (Naive Bayes, Logistic Regression, Random Forest) prioritize minimizing false positives at the expense of recall, whilst the deep learning LSTM model achieves better balance between precision and recall. SVM bridges the gap, offering near-LSTM recall with SVM-like precision.
+
+\subsection{Multi-Metric Performance Visualization}
+
+Figure~\ref{fig:metrics_comparison} provides a comprehensive bar chart comparing all five evaluation metrics across the five models. The visualization clearly demonstrates: (1) \textbf{Accuracy}: All models cluster tightly between 96.5\% and 98.0\%, with LSTM leading at 98.03\%, followed closely by SVM (97.94\%) and Random Forest (97.67\%). The narrow accuracy range confirms that SMS spam detection is well-suited for machine learning approaches. (2) \textbf{Precision}: Random Forest achieves perfect 100\% precision, followed by Naive Bayes (99.11\%), Logistic Regression (98.28\%), SVM (97.73\%), and LSTM (95.04\%). This ordering reflects the conservative classification strategies of traditional models. (3) \textbf{Recall}: LSTM dominates recall at 89.93\%, followed by SVM (86.58\%), Random Forest (81.88\%), Logistic Regression (76.51\%), and Naive Bayes (74.50\%). The deep learning advantage is most evident in this metric. (4) \textbf{F1-Score}: LSTM achieves best balance (0.9241), with SVM close behind (0.9181). Random Forest (0.9003), Logistic Regression (0.8621), and Naive Bayes (0.8511) show decreasing F1-scores correlating with their recall limitations. (5) \textbf{ROC-AUC}: All models excel with AUC above 0.97, with Random Forest leading (0.9862), followed by SVM (0.9840), Logistic Regression (0.9833), LSTM (0.9825), and Naive Bayes (0.9780).
+
+The chart reveals that model selection hinges on the precision-recall trade-off: applications requiring maximum spam detection should choose LSTM or SVM, whilst those prioritizing zero false alarms should select Random Forest or Naive Bayes.
+
+\subsection{ROC Curve Analysis}
+
+Figure~\ref{fig:roc} displays the Receiver Operating Characteristic curves for all models, plotting true positive rate against false positive rate across all classification thresholds. All five curves cluster in the upper-left corner, indicating excellent discriminative ability with AUC scores above 0.97. Random Forest achieves the highest AUC (0.9862), demonstrating superior threshold-independent performance despite lower fixed-threshold recall. SVM closely follows (0.9840), whilst LSTM (0.9825), Logistic Regression (0.9833), and Naive Bayes (0.9780) show comparable curves.
+
+The near-perfect AUC scores indicate that all models effectively learn to distinguish spam from legitimate messages. The tight clustering suggests that the choice between models should prioritize operational considerations (training time, interpretability, deployment constraints) rather than discriminative ability alone, as all models excel at separating the two classes given appropriate threshold tuning.
+
+\subsection{Quantitative Performance Summary}
+
+Table~\ref{tab:benchmark} quantifies the performance differences, revealing that the gap between best and worst accuracy is only 1.53 percentage points (98.03\% vs 96.50\%). Precision varies more significantly (100\% vs 95.04\%, a 4.96-point range), whilst recall shows the widest variation (89.93\% vs 74.50\%, a 15.43-point range). This quantitative analysis confirms that recall represents the primary discriminator between models, with traditional machine learning sacrificing recall to achieve higher precision, whilst LSTM optimizes for balanced F1-score.
+
+\subsection{Final Recommendations}
+
+Based on comprehensive analysis across confusion matrices, metrics, and ROC curves, we provide deployment recommendations:
+
+\begin{Itemize}
+    \item \textbf{Maximum Spam Detection}: Deploy LSTM for applications requiring highest spam capture rate (mobile carrier filtering, security-critical systems). Accept 7 false positives per 1,115 messages (0.6\% disruption rate) for 89.93\% spam detection.
+
+    \item \textbf{Zero False Alarms}: Choose Random Forest for user-facing applications where legitimate message disruption must be minimized (personal SMS clients, notification systems). Accept 18.1\% missed spam for perfect precision.
+
+    \item \textbf{Balanced Production}: Select SVM for optimal balance between precision (97.73\%) and recall (86.58\%), requiring only 3 false positives whilst maintaining strong spam detection. Suitable for most production deployments.
+
+    \item \textbf{Resource-Constrained}: Implement Naive Bayes for devices with limited computational resources (embedded systems, legacy hardware). Training time under 1 second with 96.5\% accuracy.
+
+    \item \textbf{Interpretability Required}: Use Logistic Regression for applications requiring explainable predictions (regulatory compliance, user feedback systems). Linear coefficients enable feature importance analysis.
+\end{Itemize}
+
 \section{CONCLUSION}
 
 This comparative study successfully implemented and evaluated five machine learning approaches for SMS spam detection, achieving excellent results across all models. The LSTM neural network emerged as the best overall performer with 98.03\% accuracy and 0.9241 F1-score, validating the effectiveness of deep learning for text classification tasks. However, traditional machine learning models, particularly SVM and Random Forest, demonstrated competitive performance whilst requiring significantly less computational resources and training time.
@@ -221,12 +333,12 @@ Future work directions: evaluate Transformers (BERT, RoBERTa) for improved conte
 
 For production deployment of SMS spam filtering systems, we recommend the \textbf{LSTM model} due to its superior F1-score and recall, ensuring maximum spam detection whilst maintaining high precision. However, for resource-constrained environments or applications requiring minimal false alarms, \textbf{SVM or Random Forest} provide excellent alternatives with faster inference times and comparable performance.
 
-\section{ACKNOWLEDGEMENTS}
+\section*{ACKNOWLEDGEMENTS}
 
-The complete project code, documentation, and trained models are available at: \url{https://github.com/[your-username]/NLP-CA3}
+The complete project code, documentation, and trained models are available at: \url{https://github.com/Sahilsonii/NLP-CA3}
 
 %\begin{thebibliography}{99}   % Use for  10-99  references
-\begin{thebibliography}{9} % Use for 1-9 references
+\begin{thebibliography}{12} % Use for 1-12 references
 
 \bibitem{almeida2011}
 T. A. Almeida and J. M. G. Hidalgo,
@@ -269,6 +381,35 @@ N. V. Chawla, K. W. Bowyer, L. O. Hall, and W. P. Kegelmeyer,
 ``SMOTE: Synthetic minority over-sampling technique,''
 \textit{Journal of Artificial Intelligence Research},
 vol. 16, pp. 321--357, 2002.
+
+\bibitem{mikolov2013}
+T. Mikolov, K. Chen, G. Corrado, and J. Dean,
+``Efficient estimation of word representations in vector space,''
+\textit{arXiv preprint arXiv:1301.3781},
+2013.
+
+\bibitem{graves2013}
+A. Graves, A. Mohamed and G. Hinton,
+``Speech recognition with deep recurrent neural networks,''
+\textit{IEEE Int. Conf. Acoustics, Speech and Signal Processing},
+pp. 6645--6649, 2013.
+
+\bibitem{aggarwal2012}
+C. C. Aggarwal and C. Zhai,
+``A survey of text classification algorithms,''
+\textit{Mining Text Data},
+Springer, pp. 163--222, 2012.
+
+\bibitem{scikit-learn}
+F. Pedregosa et al.,
+``Scikit-learn: Machine learning in Python,''
+\textit{J. Machine Learning Research},
+vol. 12, pp. 2825--2830, 2011.
+
+\bibitem{tensorflow}
+M. Abadi et al.,
+``TensorFlow: Large-scale machine learning on heterogeneous systems,''
+2015.
 
 \end{thebibliography}
 

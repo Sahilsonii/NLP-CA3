@@ -83,7 +83,7 @@ If you need the JACoW format:
 | Font Size | 12pt body | 10pt body |
 | Pages | ~6 pages | ~4 pages |
 | Title | 14pt normal | 14pt uppercase |
-| References | 10 citations | 7 citations |
+| References | 12 citations | 12 citations |
 | Style | Academic paper | Conference paper |
 | Compiler | pdfLaTeX | LuaLaTeX |
 
