@@ -1,0 +1,275 @@
+% !TeX spellcheck = en_GB
+% !TeX program = lualatex
+%
+% JACoW Conference Paper Template
+% SMS Spam Detection using Machine Learning
+%
+\documentclass[a4paper,
+               %boxit,        % check whether paper is inside correct margins
+               %titlepage,    % separate title page
+               %refpage       % separate references
+               %biblatex,     % biblatex is used
+               %keeplastbox,   % flushend option: not to un-indent last line in References
+               %nospread,     % flushend option: do not fill with whitespace to balance columns
+               %hyphens,      % allow \url to hyphenate at "-" (hyphens)
+               %xetex,        % use XeLaTeX to process the file
+               %luatex,       % use LuaLaTeX to process the file
+               ]{jacow}
+
+% ONLY FOR \footnote in table/tabular
+\usepackage{pdfpages,multirow,ragged2e}
+
+% CHANGE SEQUENCE OF GRAPHICS EXTENSION TO BE EMBEDDED
+\makeatletter%
+	\ifboolexpr{bool{xetex}}
+	 {\renewcommand{\Gin@extensions}{.pdf,%
+	                    .png,.jpg,.bmp,.pict,.tif,.psd,.mac,.sga,.tga,.gif,%
+	                    .eps,.ps,%
+	                    }}{}
+\makeatother
+
+% CHECK FOR XeTeX/LuaTeX BEFORE DEFINING AN INPUT ENCODING
+\ifboolexpr{bool{xetex} or bool{luatex}}
+ {}
+ {\usepackage[utf8]{inputenc}}
+
+\usepackage[USenglish]{babel}
+
+\listfiles
+
+\begin{document}
+
+%
+\begin{abstract}
+This case study presents a comprehensive comparative analysis of machine learning approaches for SMS spam detection. Five distinct models were implemented and evaluated: Logistic Regression, Multinomial Naive Bayes, Random Forest, Support Vector Machine (SVM), and Long Short-Term Memory (LSTM) neural network. The study utilised the UCI SMS Spam Collection dataset containing 5,574 labelled messages. Text preprocessing included lowercasing, URL/email removal, stopword elimination, and lemmatisation. Feature extraction employed TF-IDF vectorisation (5,000 features with bigrams) for traditional models and sequence tokenisation (10,000 vocabulary, 100 max length) for LSTM. Results demonstrate that the LSTM model achieved the best overall performance with 98.03\% accuracy and 0.9241 F1-score, whilst Random Forest achieved perfect precision (100\%) and the highest ROC-AUC (0.9862). All models exceeded 96.5\% accuracy, indicating SMS spam detection is well-suited for machine learning. The study provides insights into the trade-offs between model complexity, training time, and performance metrics.
+\end{abstract}
+
+\section{INTRODUCTION}
+
+SMS spam, also known as "smishing," has become a significant concern in mobile communication. Unwanted text messages not only disrupt users but also pose security threats through phishing attempts and malicious links. With the proliferation of mobile devices and the ease of mass messaging, automated spam detection has become essential for protecting users and maintaining communication channel integrity.
+
+Traditional rule-based spam filters are insufficient for handling the evolving nature of spam messages. The challenge lies in developing robust machine learning models that can accurately distinguish between legitimate messages (ham) and spam whilst handling the inherent class imbalance, informal language, abbreviations, and diverse message patterns in SMS text.
+
+\subsection{Objectives}
+
+The primary objectives of this case study are:
+\begin{Itemize}
+    \item Implement and compare five different machine learning approaches for SMS spam detection
+    \item Evaluate models using comprehensive metrics: accuracy, precision, recall, F1-score, and ROC-AUC
+    \item Analyse the trade-offs between traditional machine learning and deep learning approaches
+    \item Provide visual analysis through confusion matrices and performance comparison charts
+    \item Determine the most effective model for production deployment
+\end{Itemize}
+
+\subsection{Dataset Overview}
+
+The study employs the UCI SMS Spam Collection dataset~\cite{almeida2011}, consisting of 5,574 messages with 4,827 ham (86.6\%) and 747 spam (13.4\%). An 80\%-20\% stratified train-test split was used, resulting in 1,115 test messages (966 ham, 149 spam).
+
+\subsection{Dataset Characteristics}
+
+Figure~\ref{fig:dataset_samples} presents sample messages from the dataset, illustrating the diversity of both ham and spam messages. The dataset contains informal language, abbreviations, and varying message lengths typical of SMS communication.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=\columnwidth]{results/plots/dataset_samples.png}
+    \caption{Sample SMS messages showing ham vs spam examples.}
+    \label{fig:dataset_samples}
+\end{figure}
+
+Figure~\ref{fig:dataset_overview} provides a comprehensive overview including class distribution, statistical measures, and data split information. The significant class imbalance (86.6\% ham vs 13.4\% spam) reflects real-world SMS patterns and necessitates careful evaluation using metrics beyond simple accuracy.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=\columnwidth]{results/plots/dataset_preview.png}
+    \caption{Dataset overview with statistics and class distribution.}
+    \label{fig:dataset_overview}
+\end{figure}
+
+Key characteristics include:
+\begin{Itemize}
+    \item \textbf{Message Diversity:} Ham messages range from casual conversations to service notifications
+    \item \textbf{Spam Patterns:} Promotional content, prizes, free offers, and urgent calls-to-action
+    \item \textbf{Language Features:} Heavy use of abbreviations (e.g., "u" for "you", "txt" for "text")
+    \item \textbf{Class Imbalance:} 6.5:1 ratio requires stratified sampling and appropriate metrics
+\end{Itemize}
+
+\section{LITERATURE REVIEW}
+
+Early SMS spam detection systems relied on keyword matching and blacklisting approaches. However, these methods proved inadequate against evolving spam techniques~\cite{healy2007}. Machine learning approaches emerged as more effective solutions, leveraging statistical patterns in text data.
+
+\subsection{Traditional Machine Learning}
+
+Naive Bayes algorithms have been widely applied to text classification tasks due to their simplicity and effectiveness with bag-of-words representations~\cite{sahami1998}. The probabilistic nature makes them particularly suitable for spam detection, though they assume feature independence which may not hold in natural language.
+
+SVMs have demonstrated strong performance in text classification by finding optimal hyperplanes in high-dimensional feature spaces~\cite{drucker1999}. Their effectiveness with TF-IDF features and ability to handle non-linear decision boundaries through kernel functions make them popular for spam detection.
+
+Random Forest and other ensemble methods combine multiple decision trees to improve generalisation and reduce overfitting~\cite{breiman2001}. These approaches handle feature importance well and provide robust performance across diverse datasets.
+
+\subsection{Deep Learning Approaches}
+
+LSTM networks address the sequential nature of text by maintaining long-term dependencies through gating mechanisms~\cite{hochreiter1997}. Unlike traditional bag-of-words approaches, LSTMs capture contextual information and word order, potentially improving classification accuracy for complex messages.
+
+For imbalanced datasets like spam detection, accuracy alone is insufficient~\cite{chawla2002}. Precision-recall trade-offs, F1-score, and ROC-AUC provide more comprehensive performance assessment, especially when costs of false positives and false negatives differ.
+
+\section{METHODOLOGY}
+
+\subsection{Data Preprocessing Pipeline}
+
+The preprocessing pipeline transforms raw SMS text into clean, standardised format through four stages: (1) text cleaning: conversion to lowercase, removal of URLs, emails, phone numbers, special characters, and punctuation; (2) tokenisation: word-level splitting using NLTK; (3) stopword removal: elimination of English stopwords; (4) lemmatisation: WordNet-based reduction to base forms.
+
+\subsection{Feature Extraction}
+
+For traditional machine learning models, TF-IDF vectorisation was employed with maximum 5,000 features, unigrams and bigrams (1,2), and English stopwords filtered. The TF-IDF score is calculated as:
+\begin{equation}
+    \text{TF-IDF}(t,d) = \text{TF}(t,d) \times \log\frac{N}{\text{DF}(t)}
+\end{equation}
+where $t$ is a term, $d$ is a document, $N$ is total documents, and $\text{DF}(t)$ is document frequency.
+
+For the LSTM model, sequence tokenisation was used with vocabulary size 10,000, maximum sequence length 100, post-padding, and special <OOV> token for out-of-vocabulary words.
+
+\subsection{Model Architectures}
+
+\subsubsection{Traditional Models}
+
+Four traditional machine learning models were implemented: (1) \textbf{Logistic Regression}: 1,000 max iterations, lbfgs solver, L2 regularisation; (2) \textbf{Multinomial Naive Bayes}: alpha 1.0 Laplace smoothing; (3) \textbf{Random Forest}: 100 estimators, Gini impurity criterion; (4) \textbf{Support Vector Machine}: linear kernel, probability estimates enabled.
+
+\subsubsection{Deep Learning Model}
+
+The LSTM neural network architecture consists of: (1) Embedding layer: 64 dimensions, masking enabled; (2) Bidirectional LSTM: 32 units, return sequences, dropout 0.2; (3) Dropout layer: 0.2 rate; (4) LSTM layer: 16 units, dropout 0.2; (5) Dense layer: 16 units, ReLU activation; (6) Dropout layer: 0.2 rate; (7) Output layer: 1 unit, sigmoid activation.
+
+Training configuration: Adam optimiser (learning rate 0.001), binary crossentropy loss, batch size 32, 5 epochs with early stopping, 20\% validation split, class weights applied to handle imbalance.
+
+\subsection{Evaluation Metrics}
+
+Model performance was assessed using five key metrics: (1) Accuracy: $\frac{TP + TN}{TP + TN + FP + FN}$; (2) Precision: $\frac{TP}{TP + FP}$; (3) Recall: $\frac{TP}{TP + FN}$; (4) F1-Score: $2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}$; (5) ROC-AUC: area under the receiver operating characteristic curve, where $TP$ = True Positives, $TN$ = True Negatives, $FP$ = False Positives, $FN$ = False Negatives.
+
+\subsection{Implementation}
+
+Technologies used: Python 3.10, scikit-learn 1.3, TensorFlow 2.21, NLTK 3.8, pandas 2.1, NumPy 2.2, matplotlib 3.8, seaborn 0.13. CPU-based training with average time <5 seconds for traditional models, ~30 seconds for LSTM.
+
+\section{RESULTS}
+
+\subsection{Overall Performance}
+
+Table~\ref{tab:benchmark} presents the comprehensive performance metrics for all five models evaluated on the test set.
+
+\begin{table}[!htb]
+\centering
+\caption{Benchmark Comparison of All Models}
+\label{tab:benchmark}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Model} & \textbf{Acc.} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} & \textbf{AUC} \\
+\midrule
+\textbf{LSTM} & \textbf{0.980} & 0.950 & \textbf{0.899} & \textbf{0.924} & 0.982 \\
+SVM & 0.979 & 0.977 & 0.866 & 0.918 & 0.984 \\
+Random Forest & 0.976 & \textbf{1.000} & 0.819 & 0.900 & \textbf{0.986} \\
+Logistic Reg. & 0.968 & 0.991 & 0.765 & 0.864 & 0.983 \\
+Naive Bayes & 0.965 & 0.991 & 0.745 & 0.851 & 0.978 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Key Findings}
+
+LSTM achieved the highest accuracy (98.03\%) and F1-score (0.9241), demonstrating the effectiveness of deep learning for capturing sequential patterns in SMS text. Random Forest achieved perfect precision (100\%) with zero false positives, making it ideal for applications where false alarms are costly. Random Forest also achieved the highest ROC-AUC (0.9862), indicating superior discriminative ability across all threshold values. LSTM demonstrated the best recall (89.93\%), correctly identifying the most spam messages. Traditional ML models (SVM, Random Forest) performed competitively with LSTM whilst requiring significantly less training time.
+
+\subsection{Confusion Matrix Analysis}
+
+Figure~\ref{fig:cm_lstm} shows the LSTM confusion matrix revealing: 959 true negatives (ham correctly classified), 134 true positives (spam correctly detected), 7 false positives (ham misclassified as spam), and 15 false negatives (spam missed).
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=\columnwidth]{results/confusion_matrices/lstm_cm.png}
+    \caption{Confusion matrix for LSTM model (best overall).}
+    \label{fig:cm_lstm}
+\end{figure}
+
+\subsection{Performance Comparison}
+
+Figure~\ref{fig:metrics_comparison} illustrates the comprehensive comparison across all evaluation metrics for the five models.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=\columnwidth]{results/plots/metrics_comparison.png}
+    \caption{Comprehensive metrics comparison across all models.}
+    \label{fig:metrics_comparison}
+\end{figure}
+
+Figure~\ref{fig:roc} demonstrates that all models achieve excellent ROC-AUC scores above 0.97, with Random Forest slightly outperforming others at 0.9862. The curves indicate strong discriminative capability across different threshold settings.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=\columnwidth]{results/plots/roc_curves.png}
+    \caption{ROC curves comparison for all models.}
+    \label{fig:roc}
+\end{figure}
+
+\subsection{Model Selection by Use Case}
+
+Model selection depends on application requirements: (1) \textbf{Production Deployment}: LSTM (best F1-score 0.9241, highest recall 89.93\%); (2) \textbf{Minimal False Alarms}: Random Forest (perfect precision 100\%, zero false positives); (3) \textbf{Quick Prototyping}: Naive Bayes (fastest training, simple implementation); (4) \textbf{Balanced Performance}: SVM (strong F1-score 0.9181, excellent ROC-AUC); (5) \textbf{Interpretability}: Logistic Regression (linear coefficients, feature importance).
+
+\section{CONCLUSION}
+
+This comparative study successfully implemented and evaluated five machine learning approaches for SMS spam detection, achieving excellent results across all models. The LSTM neural network emerged as the best overall performer with 98.03\% accuracy and 0.9241 F1-score, validating the effectiveness of deep learning for text classification tasks. However, traditional machine learning models, particularly SVM and Random Forest, demonstrated competitive performance whilst requiring significantly less computational resources and training time.
+
+\subsection{Limitations and Future Work}
+
+Limitations include: dataset limited to English SMS messages; 13.4\% spam ratio may not reflect real-world distributions; static dataset doesn't capture evolving spam techniques; limited LSTM hyperparameter tuning.
+
+Future work directions: evaluate Transformers (BERT, RoBERTa) for improved contextual understanding; combine multiple models through voting or stacking; implement online learning for adapting to new spam patterns; integrate LIME or SHAP for model interpretability; extend to multilingual SMS spam detection; optimise for asymmetric misclassification costs.
+
+For production deployment of SMS spam filtering systems, we recommend the \textbf{LSTM model} due to its superior F1-score and recall, ensuring maximum spam detection whilst maintaining high precision. However, for resource-constrained environments or applications requiring minimal false alarms, \textbf{SVM or Random Forest} provide excellent alternatives with faster inference times and comparable performance.
+
+\section{ACKNOWLEDGEMENTS}
+
+The complete project code, documentation, and trained models are available at: \url{https://github.com/[your-username]/NLP-CA3}
+
+%\begin{thebibliography}{99}   % Use for  10-99  references
+\begin{thebibliography}{9} % Use for 1-9 references
+
+\bibitem{almeida2011}
+T. A. Almeida and J. M. G. Hidalgo,
+``SMS spam collection,''
+\textit{UCI Machine Learning Repository},
+2011.
+
+\bibitem{healy2007}
+M. Healy, S. Delany, and A. Zamolotskikh,
+``An assessment of case-based reasoning for short text message classification,''
+\textit{Proc. 16th Irish Conf. Artificial Intelligence and Cognitive Science},
+pp. 257--266, 2007.
+
+\bibitem{sahami1998}
+M. Sahami, S. Dumais, D. Heckerman, and E. Horvitz,
+``A Bayesian approach to filtering junk e-mail,''
+\textit{Learning for Text Categorization: Papers from the 1998 Workshop},
+vol. 62, pp. 98--105, 1998.
+
+\bibitem{drucker1999}
+H. Drucker, D. Wu, and V. N. Vapnik,
+``Support vector machines for spam categorization,''
+\textit{IEEE Trans. Neural Networks},
+vol. 10, no. 5, pp. 1048--1054, 1999.
+
+\bibitem{breiman2001}
+L. Breiman,
+``Random forests,''
+\textit{Machine Learning},
+vol. 45, no. 1, pp. 5--32, 2001.
+
+\bibitem{hochreiter1997}
+S. Hochreiter and J. Schmidhuber,
+``Long short-term memory,''
+\textit{Neural Computation},
+vol. 9, no. 8, pp. 1735--1780, 1997.
+
+\bibitem{chawla2002}
+N. V. Chawla, K. W. Bowyer, L. O. Hall, and W. P. Kegelmeyer,
+``SMOTE: Synthetic minority over-sampling technique,''
+\textit{Journal of Artificial Intelligence Research},
+vol. 16, pp. 321--357, 2002.
+
+\end{thebibliography}
+
+\end{document}
