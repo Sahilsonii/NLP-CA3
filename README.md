@@ -229,8 +229,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Author
 
 **Sahil Soni**
-- GitHub: [@Sahilsonii](https://github.com/Sahilsonii)
-- Repository: [NLP-CA3](https://github.com/Sahilsonii/NLP-CA3)
 
 ## Acknowledgments
 
@@ -238,6 +236,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Scikit-learn and TensorFlow communities
 - NLTK project for NLP tools
 
----
-
-**Ready to start?** Run `./setup.sh` (or `setup.bat` on Windows) and then `python train_models.py`!
